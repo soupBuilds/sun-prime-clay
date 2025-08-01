@@ -1,0 +1,48 @@
+datasource db {
+  provider = "postgresql"
+  url      = env("DATABASE_URL")
+}
+
+generator client {
+  provider = "prisma-client-js"
+}
+
+model Role {
+  id   Int    @id @default(autoincrement())
+  name String @unique
+  users User[]
+}
+
+model User {
+  id           Int      @id @default(autoincrement())
+  name         String
+  email        String   @unique
+  passwordHash String
+  roleId       Int?
+  role         Role?    @relation(fields: [roleId], references: [id])
+  createdAt    DateTime @default(now())
+}
+
+model Vendor {
+  id      Int    @id @default(autoincrement())
+  name    String
+  contact String?
+  pos     PurchaseOrder[]
+}
+
+enum MaterialType {
+  HCL
+  BENTONITE
+}
+
+model PurchaseOrder {
+  id           Int          @id @default(autoincrement())
+  vendorId     Int
+  vendor       Vendor       @relation(fields: [vendorId], references: [id])
+  material     MaterialType
+  quantityKg   Float
+  unitPriceUSD Float
+  expectedDate DateTime
+  status       String       @default("OPEN") // OPEN | CANCELLED | RECEIVED
+  createdAt    DateTime     @default(now())
+}

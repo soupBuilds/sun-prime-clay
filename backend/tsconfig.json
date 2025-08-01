@@ -1,0 +1,9 @@
+{
+  "compilerOptions": {
+    "module": "CommonJS",        /* output uses require() — matches the rest of the backend */
+    "target": "ES2020",
+    "esModuleInterop": true,     /* allows clean 'import x from' syntax */
+    "strict": true,
+    "skipLibCheck": true
+  }
+}

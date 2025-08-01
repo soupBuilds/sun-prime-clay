@@ -1,20 +1,19 @@
-import { useEffect, useState } from 'react';
+import { Link, Outlet } from 'react-router-dom'
 
-function App() {
-  const [msg, setMsg] = useState('Loading…');
-
-  useEffect(() => {
-    fetch('/api/hello')
-      .then(res => res.json())
-      .then(data => setMsg(data.message))
-      .catch(() => setMsg('Error fetching message'));
-  }, []);
-
+export default function App() {
   return (
-    <div className="flex h-screen items-center justify-center">
-      <h1 className="text-2xl font-bold">{msg}</h1>
-    </div>
-  );
-}
+    <div className="min-h-screen flex flex-col">
+      {/* ─── Navigation bar ─────────────────────────────── */}
+      <nav className="bg-gray-900 text-white p-4 flex gap-6">
+        <Link to="/"   className="hover:text-blue-400">Home</Link>
+        <Link to="/po" className="hover:text-blue-400">Purchase Orders</Link>
+        {/* add more links later: /maintenance, /qc, /hr, … */}
+      </nav>
 
-export default App;
+      {/* ─── Routed pages render here ───────────────────── */}
+      <main className="flex-1 p-6">
+        <Outlet />  {/* React-Router will inject the matched page */}
+      </main>
+    </div>
+  )
+}
