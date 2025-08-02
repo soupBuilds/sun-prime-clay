@@ -1,29 +1,39 @@
-const router          = require('express').Router()
-const ah              = require('express-async-handler')
-const { PrismaClient }= require('@prisma/client')
-const prisma          = new PrismaClient()
-const requireAuth     = require('../middleware/requireAuth')        // just validates token
-const requireAdmin    = require('../middleware/requireRole')('ADMIN')
+/******************************************************************************
+ * Vendor routes                                                              *
+ * Anyone authenticated can read; only ADMIN can create/update/delete.        *
+ ******************************************************************************/
 
-/* ─── READ: available to every authenticated user ─── */
-router.get('/', requireAuth, ah(async (_, res) => {
+const router        = require('express').Router()
+const ah            = require('express-async-handler')
+const { PrismaClient } = require('@prisma/client')
+const prisma        = new PrismaClient()
+
+const requireAuth   = require('../middleware/requireAuth')
+const requireAdmin  = require('../middleware/requireRole')('ADMIN')
+
+/* ── READ list ───────────────────────────────────────────────────────────── */
+router.get('/', requireAuth, ah(async (_req, res) => {
   res.json(await prisma.vendor.findMany())
 }))
 
-/* ─── WRITE: admin-only operations ─── */
-router.post('/',    requireAdmin, ah(async (req, res) => {
+/* ── CREATE ──────────────────────────────────────────────────────────────── */
+router.post('/', requireAdmin, ah(async (req, res) => {
   const { name, contact } = req.body
   if (!name) return res.status(400).json({ msg: 'Name required' })
-  res.status(201).json(await prisma.vendor.create({ data: { name, contact } }))
+  const created = await prisma.vendor.create({ data: { name, contact } })
+  res.status(201).json(created)
 }))
 
-router.put('/:id',  requireAdmin, ah(async (req, res) => {
-  res.json(await prisma.vendor.update({
+/* ── UPDATE ──────────────────────────────────────────────────────────────── */
+router.put('/:id', requireAdmin, ah(async (req, res) => {
+  const updated = await prisma.vendor.update({
     where: { id: Number(req.params.id) },
     data:  req.body,
-  }))
+  })
+  res.json(updated)
 }))
 
+/* ── DELETE ──────────────────────────────────────────────────────────────── */
 router.delete('/:id', requireAdmin, ah(async (req, res) => {
   await prisma.vendor.delete({ where: { id: Number(req.params.id) } })
   res.sendStatus(204)

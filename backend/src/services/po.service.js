@@ -1,16 +1,40 @@
+/******************************************************************************
+ * Service layer for Purchase Orders                                          *
+ * Keeps Prisma calls in one module so routes stay thin and unit-testable.    *
+ ******************************************************************************/
+
 const { PrismaClient } = require('@prisma/client')
 const prisma = new PrismaClient()
 
-exports.createPO = (data) => {
-  return prisma.purchaseOrder.create({
+/* ── CREATE ──────────────────────────────────────────────────────────────── */
+exports.create = (body) =>
+  prisma.purchaseOrder.create({
     data: {
-      ...data,
-      // ensure Postgres gets a full timestamp, not a bare string
-      expectedDate: new Date(data.expectedDate + 'T00:00:00Z'),
+      ...body,
+      // ensure DateTime : if frontend sends 'YYYY-MM-DD'
+      expectedDate: new Date(body.expectedDate + 'T00:00:00Z'),
     },
+    include: { vendor: true },
   })
-}
 
-exports.listPO   = ()      => prisma.purchaseOrder.findMany({ include:{vendor:true} })
-exports.updatePO = (id, d) => prisma.purchaseOrder.update({ where:{id}, data:d })
-exports.deletePO = (id)    => prisma.purchaseOrder.delete({ where:{id} })
+/* ── READ list ───────────────────────────────────────────────────────────── */
+exports.list = () =>
+  prisma.purchaseOrder.findMany({ include: { vendor: true } })
+
+/* ── UPDATE ──────────────────────────────────────────────────────────────── */
+exports.update = (id, body) =>
+  prisma.purchaseOrder.update({
+    where: { id },
+    data:  {
+      ...body,
+      // if expectedDate is present, convert yyyy-mm-dd → ISO
+      ...(body.expectedDate
+        ? { expectedDate: new Date(body.expectedDate + 'T00:00:00Z') }
+        : {}),
+    },
+    include: { vendor: true },
+  })
+
+/* ── DELETE ──────────────────────────────────────────────────────────────── */
+exports.remove = (id) =>
+  prisma.purchaseOrder.delete({ where: { id } })

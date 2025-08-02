@@ -1,15 +1,17 @@
+// prisma/schema.prisma
 datasource db {
   provider = "postgresql"
-  url      = env("DATABASE_URL")
+  url      = env("DATABASE_URL")  // set in backend/.env
 }
 
 generator client {
   provider = "prisma-client-js"
 }
 
+/* ── RBAC ───────────────────────────────────────────── */
 model Role {
-  id   Int    @id @default(autoincrement())
-  name String @unique
+  id    Int    @id @default(autoincrement())
+  name  String @unique          // ADMIN | PROCUREMENT | MAINTENANCE
   users User[]
 }
 
@@ -18,11 +20,13 @@ model User {
   name         String
   email        String   @unique
   passwordHash String
-  roleId       Int?
-  role         Role?    @relation(fields: [roleId], references: [id])
   createdAt    DateTime @default(now())
+
+  roleId Int?
+  role   Role?   @relation(fields: [roleId], references: [id])
 }
 
+/* ── Master data ────────────────────────────────────── */
 model Vendor {
   id      Int    @id @default(autoincrement())
   name    String
@@ -30,6 +34,7 @@ model Vendor {
   pos     PurchaseOrder[]
 }
 
+/* ── Purchase Orders ───────────────────────────────── */
 enum MaterialType {
   HCL
   BENTONITE
@@ -39,9 +44,11 @@ model PurchaseOrder {
   id           Int          @id @default(autoincrement())
   vendorId     Int
   vendor       Vendor       @relation(fields: [vendorId], references: [id])
+
   material     MaterialType
   quantityKg   Float
   unitPriceUSD Float
+
   expectedDate DateTime
   status       String       @default("OPEN") // OPEN | CANCELLED | RECEIVED
   createdAt    DateTime     @default(now())

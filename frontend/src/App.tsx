@@ -7,6 +7,7 @@ export default function App() {
       <nav className="bg-gray-900 text-white p-4 flex gap-6">
         <Link to="/"   className="hover:text-blue-400">Home</Link>
         <Link to="/po" className="hover:text-blue-400">Purchase Orders</Link>
+        <Link to="/vendors" className="hover:text-blue-400">Vendors</Link>
         {/* add more links later: /maintenance, /qc, /hr, … */}
       </nav>
 

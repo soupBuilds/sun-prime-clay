@@ -1,54 +1,47 @@
 /******************************************************************************
- *  Canonical Express entry point — single source of truth for Day-2 backend  *
+ *  Sun-Prime Clay – Backend entry (Express + Prisma)                          *
+ *  Purpose: start HTTP server, connect Prisma, expose a health endpoint.      *
  ******************************************************************************/
-require('dotenv').config()
-const express           = require('express')
-const { PrismaClient }  = require('@prisma/client')
 
+require('dotenv').config()
+const express          = require('express')
+const cookieParser     = require('cookie-parser')
+const { PrismaClient } = require('@prisma/client')
+
+/* ── Instantiate ──────────────────────────────────────────────────────────── */
 const prisma = new PrismaClient()
 const app    = express()
 const port   = process.env.PORT || 4000
 
+/* ── Global middleware ────────────────────────────────────────────────────── */
+app.use(express.json())   // parse JSON bodies
+app.use(cookieParser())   // read cookies for auth
 
-/* ---------- global middleware ---------- */
-app.use(express.json())                 // automatic JSON body parsing
-
-const cookieParser = require('cookie-parser')
-const authRoutes   = require('./routes/auth')
-
-app.use(cookieParser())           // after express.json()
-app.use('/api/auth', authRoutes)
-
-
-/* ---------- trivial “alive” check ---------- */
-app.get('/api/hello', (_, res) => {
+/* ── Health/hello route (compile-check) ───────────────────────────────────── */
+app.get('/api/hello', (_req, res) => {
   res.json({ message: 'Hello from Sun Prime Clay API!' })
 })
 
-/* ---------- smoke-test Prisma ---------- */
-app.get('/api/users', async (_, res, next) => {
-  try {
-    const users = await prisma.user.findMany({ include: { role: true } })
-    res.json(users)                      // should return [] until you add users
-  } catch (err) {
-    next(err)
-  }
-})
+/* ── Authentication/ auth route ───────────────────────────────────────────── */
+const authRoutes = require('./routes/auth')
+app.use('/api/auth', authRoutes)
 
-/* ---------- start server ---------- */
-app.listen(port, () => {
-  console.log(`🚀  Backend listening at http://localhost:${port}`)
-})
+/* ── Purchase Order/ po route ─────────────────────────────────────────────── */
+const poRoutes = require('./routes/po')
+app.use('/api/po', poRoutes)
 
-/* ---------- graceful shutdown ---------- */
+/* ── Vendor/ vendor route ─────────────────────────────────────────────────── */
+const vendorRoutes = require('./routes/vendor')
+app.use('/api/vendor', vendorRoutes)
+
+/* ── Graceful shutdown ────────────────────────────────────────────────────── */
 process.on('SIGINT', async () => {
   await prisma.$disconnect()
   process.exit(0)
 })
 
-const poRoutes = require('./routes/po')
-app.use('/api/po', poRoutes)
+/* ── Start server ─────────────────────────────────────────────────────────── */
+app.listen(port, () =>
+  console.log(`🚀  Backend listening on http://localhost:${port}`)
+)
 
-
-const vendorRoutes = require('./routes/vendor')
-app.use('/api/vendor', vendorRoutes)

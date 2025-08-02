@@ -6,17 +6,16 @@ async function main() {
     data: [
       { name: 'ADMIN' },
       { name: 'PROCUREMENT' },
-      { name: 'MAINTENANCE' }
+      { name: 'MAINTENANCE' },
     ],
     skipDuplicates: true,
   })
 
-  await prisma.vendor.createMany({
-    data: [{ id:1, name: 'Default Vendor', contact: 'vendor@example.com'}],
-    skipDuplicates: true,
-  })
+await prisma.vendor.createMany({
+  data: [{ name: 'Default Vendor', contact: 'vendor@example.com' }],
+  skipDuplicates: true,
+})
+
 }
 
-main()
-  .catch((e) => { console.error(e); process.exit(1) })
-  .finally(() => prisma.$disconnect())
+main().finally(() => prisma.$disconnect())
